@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Warna utama hijau -->
+    <color name="colorPrimary">#43A047</color>
+    <color name="colorPrimaryVariant">#388E3C</color>
+    <color name="colorOnPrimary">#FFFFFF</color>
+
+    <!-- Warna aksen kuning -->
+    <color name="colorSecondary">#FBC02D</color>
+    <color name="colorSecondaryVariant">#F9A825</color>
+    <color name="colorOnSecondary">#000000</color>
+
+    <!-- Warna latar -->
+    <color name="colorBackground">#FFFFFF</color>
+    <color name="colorOnBackground">#000000</color>
+
+    <!-- Tambahan opsional -->
+    <color name="buttonGreen">#43A047</color>
+    <color name="accentYellow">#FBC02D</color>
+
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- Risk level background colors (subtle pastels) -->
+    <color name="risk_low_bg">#E8F5E9</color>
+    <color name="risk_medium_bg">#FFF3E0</color>
+    <color name="risk_high_bg">#FFEBEE</color>
+
+    <!-- Risk level text colors (darker shades for contrast) -->
+    <color name="risk_low_text">#1B5E20</color>
+    <color name="risk_medium_text">#E65100</color>
+    <color name="risk_high_text">#B71C1C</color>
+
+</resources>
