@@ -38,7 +38,6 @@ public class DpnCalcActivity extends AppCompatActivity {
     private OrtSession ortSession;
     private static final String MODEL_NAME = "model_2 (2).onnx";
 
-    // UI Components
     private AutoCompleteTextView raceDropdown, genderDropdown, maxGluSerumDropdown,
             a1cResultDropdown, readmittedDropdown,  diag1Input, diag2Input, diag3Input;
     private TextInputEditText ageInput;
@@ -259,6 +258,7 @@ public class DpnCalcActivity extends AppCompatActivity {
     }
     public static final Map<String, Float> MEDICATION_STATUS;
     public static final Map<String, Float> A1C_RESULT;
+    public static final Map<String, Float> GLU_RESULT;
 
     static {
         MEDICATION_STATUS = new HashMap<>();
@@ -272,6 +272,12 @@ public class DpnCalcActivity extends AppCompatActivity {
         A1C_RESULT.put("Norm", 1.0f);
         A1C_RESULT.put(">7", 2.0f);
         A1C_RESULT.put(">8", 3.0f);
+
+        GLU_RESULT = new HashMap<>();
+        GLU_RESULT.put("None", 0.0f);
+        GLU_RESULT.put("Norm", 1.0f);
+        GLU_RESULT.put(">200", 2.0f);
+        GLU_RESULT.put(">300", 3.0f);
     }
     private void calculateAndDisplayRisk() {
         if (!validateInputs()) {
@@ -289,15 +295,20 @@ public class DpnCalcActivity extends AppCompatActivity {
         patientData.put("weight", weightInput.getText().toString());
 
         patientData.put("A1Cresult", a1cResultDropdown.getText().toString());
+        patientData.put("gluresult", maxGluSerumDropdown.getText().toString());
+        patientData.put("readmitted", readmittedDropdown.getText().toString());
 
         patientData.put("insulin", insulinCheckbox.isChecked() ? "Steady" : "No");
         patientData.put("metformin", metforminCheckbox.isChecked() ? "Steady" : "No");
         patientData.put("diabetesMed", diabetesMedCheckbox.isChecked() ? "Yes" : "No");
 
         patientData.put("age", ageInput.getText().toString());
+        patientData.put("num_lab_procedures", numLabProceduresInput.getText().toString());
+        patientData.put("num_medications", numMedicationsInput.getText().toString());
+        patientData.put("number_outpatient", numberOutpatientInput.getText().toString());
         patientData.put("number_emergency", numberEmergencyInput.getText().toString());
         patientData.put("number_inpatient", numberInpatientInput.getText().toString());
-        patientData.put("number_outpatient", numberOutpatientInput.getText().toString());
+        patientData.put("number_diagnoses", numberDiagnosesInput.getText().toString());
 
         double dpnRisk = calculateDPNRisk(patientData);
         String riskLevel = interpretDPNRiskScore(dpnRisk);
@@ -305,9 +316,9 @@ public class DpnCalcActivity extends AppCompatActivity {
         try {
             float[] inputData = preprocessInput();
             float[] result = runInference(inputData);
-            updateResultWithModelPrediction(result[0]);
+            updateResultWithModelPrediction((double) result[0]);
         } catch (Exception e) {
-            Log.e("DpnCalc", "Error in ONNX inference: " + e.getMessage(), e);
+            Log.e("DpnCalc", "Kesalahan dalam inferensi ONNX: " + e.getMessage(), e);
         }
         Intent intent = new Intent(DpnCalcActivity.this, ResultActivity.class);
 
@@ -331,16 +342,16 @@ public class DpnCalcActivity extends AppCompatActivity {
         }
         return 0f;
     }
-    private void updateResultWithModelPrediction(float modelScore) {
+    private void updateResultWithModelPrediction(double modelScore) {
         String currentText = resultText.getText().toString();
-        String modelRiskLevel = interpretRiskScore(modelScore);
+        String modelRiskLevel = interpretDPNRiskScore(modelScore);
         resultText.setText(currentText + "\nModel Prediction: " + modelRiskLevel +
                 String.format(" (Score: %.2f)", modelScore));
     }
 
     private String interpretDPNRiskScore(double score) {
         if (score < 0.3) return "Low Risk";
-        else if (score < 0.6) return "Medium Risk";
+        else if (score < 0.7) return "Medium Risk";
         else return "High Risk";
     }
 
@@ -348,32 +359,48 @@ public class DpnCalcActivity extends AppCompatActivity {
         double diagnosisScore = getDiagnosisScore(patientData);
         double riskScore = getRiskFactorScore(patientData);
 
-        double risk = 0.1;
+        double MAX_DIAGNOSIS_SCORE = 6.0;
+        double MAX_RISK_SCORE = 8.0;
+        double BASE_RISK = 0.1;
+        double DIAGNOSIS_WEIGHT = 0.4;
+        double RISK_FACTOR_WEIGHT = 0.4;
+        double INTERACTION_WEIGHT = 0.3;
 
-        risk += (diagnosisScore / 6) * 0.4;
+        double normDiagnosis = Math.min(diagnosisScore / MAX_DIAGNOSIS_SCORE, 1.0);
+        double normRisk = Math.min(riskScore / MAX_RISK_SCORE, 1.0);
 
-        risk += (riskScore / 4) * 0.4;
 
-        double bmi = parseDoubleOrZero(patientData.get("bmi"));
-        if (bmi >= 30) {
-            risk += 0.1;
-        } else if (bmi >= 25) {
-            risk += 0.05;
+        double ageAdjustment = 0.0;
+        if (patientData.containsKey("age")) {
+            try {
+                double age = Double.parseDouble(patientData.get("age"));
+                double baseAge = 40.0;
+
+                if (age >= baseAge) {
+                    double maxAdjustment = 0.20;
+                    double growthRate = 0.6;
+                    ageAdjustment = maxAdjustment * (1 - Math.exp(-growthRate * (age - baseAge) / 30));
+                    ageAdjustment = Math.min(maxAdjustment, Math.max(0, ageAdjustment));
+                }
+            } catch (NumberFormatException ignored) {}
+        }
+        double risk = BASE_RISK + ageAdjustment +
+                (normDiagnosis * DIAGNOSIS_WEIGHT) +
+                (normRisk * RISK_FACTOR_WEIGHT);
+
+        risk *= (1.0 + (normDiagnosis * normRisk * INTERACTION_WEIGHT));
+
+        double confidence = 1.0;
+        if (patientData.containsKey("number_diagnoses")) {
+            try {
+                int diagnoses = Integer.parseInt(patientData.get("number_diagnoses"));
+                confidence = Math.min(1.0, diagnoses / 5.0);
+            } catch (NumberFormatException ignored) {}
         }
 
-        int emergencyVisits = parseIntOrZero(patientData.get("number_emergency"));
-        int inpatientVisits = parseIntOrZero(patientData.get("number_inpatient"));
+        double adjustedRisk = (risk * confidence) + ((BASE_RISK + ageAdjustment) * (1 - confidence));
 
-        if (emergencyVisits > 0) {
-            risk += 0.05;
-        }
-        if (inpatientVisits > 0) {
-            risk += 0.05;
-        }
-
-        risk = Math.min(risk, 1.0);
-
-        return risk;
+        return Math.max(0.1, Math.min(adjustedRisk, 1.0));
     }
 
     private static double getDiagnosisScore(Map<String, String> patientData) {
@@ -422,7 +449,7 @@ public class DpnCalcActivity extends AppCompatActivity {
 
 
     private static double getRiskFactorScore(Map<String, String> patientData) {
-        double score = 0;
+        double score = 0.1;
 
         Map<String, Double> a1cMap = new HashMap<>();
         a1cMap.put(">8", 2.0);
@@ -431,36 +458,90 @@ public class DpnCalcActivity extends AppCompatActivity {
         a1cMap.put("Norm", 0.0);
         a1cMap.put("None", 0.0);
 
-        String a1cResult = patientData.get("A1Cresult");
-        if (a1cResult != null && a1cMap.containsKey(a1cResult)) {
+        Map<String, Double> gluMap = new HashMap<>();
+        gluMap.put(">300", 2.0);
+        gluMap.put(">200", 1.5);
+        gluMap.put("Normal", 0.0);
+        gluMap.put("Norm", 0.0);
+        gluMap.put("None", 0.0);
+        String a1cResult = patientData.getOrDefault("A1Cresult", "");
+        String gluResult = patientData.getOrDefault("gluresult", "");
+        String insulin = patientData.getOrDefault("insulin", "");
+        String metformin = patientData.getOrDefault("metformin", "");
+        String maxGluSerum = patientData.getOrDefault("max_glu_serum", "");
+
+        // A1C & Glucose score
+        if (a1cMap.containsKey(a1cResult)) {
             score += a1cMap.get(a1cResult);
         }
-
-        String insulin = patientData.get("insulin");
-        if (insulin != null && (insulin.equals("Steady") || insulin.equals("Up"))) {
-            score += 1.5;
+        if (gluMap.containsKey(gluResult)) {
+            score += gluMap.get(gluResult);
         }
 
-        String metformin = patientData.get("metformin");
-        if (metformin != null && (metformin.equals("Steady") || metformin.equals("Up"))) {
+        // Medication usage
+        if ("Steady".equals(insulin) || "Up".equals(insulin)) {
+            score += 1.5;
+        }
+        if ("Steady".equals(metformin) || "Up".equals(metformin)) {
             score += 1.0;
         }
 
         int numEmergency = parseIntOrZero(patientData.get("number_emergency"));
-        if (numEmergency > 0) {
-            score *= (1 + (0.1 * Math.min(numEmergency, 3)));
+        int numInpatient = parseIntOrZero(patientData.get("number_inpatient"));
+        if (numEmergency > 0) score += 0.5 * Math.min(numEmergency, 3);
+        if (numInpatient > 0) score += 0.5 * Math.min(numInpatient, 3);
+
+        Double bmi = parseDoubleOrNull(patientData.get("bmi"));
+        if (bmi != null) {
+            if (bmi >= 40) score += 2.0;
+            else if (bmi >= 35) score += 1.5;
+            else if (bmi >= 30) score += 1.0;
+            else if (bmi >= 25) score += 0.5;
         }
 
-        return score;
+        int numLabProcedures = parseIntOrZero(patientData.get("num_lab_procedures"));
+        int numProcedures = parseIntOrZero(patientData.get("num_procedures"));
+        int numMedications = parseIntOrZero(patientData.get("num_medications"));
+
+        if (numLabProcedures > 0) score += 0.05 * Math.min(numLabProcedures, 100);
+        if (numProcedures > 0) score += 0.2 * Math.min(numProcedures, 10);
+        if (numMedications > 0) score += 0.1 * Math.min(numMedications, 50);
+
+        double interactionScore = 0.0;
+        Set<Object> conditions = new HashSet<>();
+        conditions.add(patientData.get("A1Cresult"));
+        conditions.add(patientData.get("max_glu_serum"));
+        conditions.add(patientData.get("insulin"));
+        conditions.add(bmi);
+
+        boolean gluCondition = conditions.contains(">200") || conditions.contains(">300");
+        boolean a1cCondition = conditions.contains(">7") || conditions.contains(">8");
+
+        if (gluCondition && a1cCondition) interactionScore += 0.5;
+
+        if (("Steady".equals(insulin) || "Up".equals(insulin)) &&
+                (">200".equals(maxGluSerum) || ">300".equals(maxGluSerum)) &&
+                numEmergency > 0) {
+            interactionScore += 0.6;
+        }
+
+        if (bmi != null && bmi >= 30 && (">7".equals(a1cResult) || ">8".equals(a1cResult))) {
+            interactionScore += 0.5;
+        }
+
+        int riskFactorCount = 0;
+        if (">7".equals(a1cResult) || ">8".equals(a1cResult)) riskFactorCount++;
+        if (">200".equals(maxGluSerum) || ">300".equals(maxGluSerum)) riskFactorCount++;
+        if ("Steady".equals(insulin) || "Up".equals(insulin)) riskFactorCount++;
+        if (bmi != null && bmi >= 30) riskFactorCount++;
+        if (numEmergency > 0) riskFactorCount++;
+        if (numInpatient > 0) riskFactorCount++;
+
+        interactionScore += Math.min(Math.max(riskFactorCount - 2, 0), 4) * 0.2;
+
+        return score + interactionScore;
     }
 
-    private static double parseDoubleOrZero(String value) {
-        try {
-            return Double.parseDouble(value);
-        } catch (NumberFormatException | NullPointerException e) {
-            return 0.0;
-        }
-    }
 
     private static int parseIntOrZero(String value) {
         if (value == null || value.trim().isEmpty()) {
@@ -696,13 +777,8 @@ public class DpnCalcActivity extends AppCompatActivity {
         return A1C_RESULT.getOrDefault(a1cResult, 0.0f);
     }
 
-    private float convertMaxGluSerumToFloat(String maxGluSerum) {
-        switch (maxGluSerum) {
-            case ">300": return 3.0f;
-            case ">200": return 2.0f;
-            case "Normal": return 1.0f;
-            default: return 0.0f;
-        }
+    private float convertMaxGluSerumToFloat(String gluResult) {
+        return GLU_RESULT.getOrDefault(gluResult, 0.0f);
     }
     private boolean validateInputs() {
         if (ageInput.getText().toString().isEmpty() ||
@@ -748,13 +824,6 @@ public class DpnCalcActivity extends AppCompatActivity {
         }
     }
 
-
-    private String interpretRiskScore(float score) {
-        if (score < 0.3) return "Low Risk";
-        else if (score < 0.7) return "Medium Risk";
-        else return "High Risk";
-    }
-
     private float parseFloatSafely(String value) {
         try {
             return Float.parseFloat(value);
@@ -762,7 +831,13 @@ public class DpnCalcActivity extends AppCompatActivity {
             return 0f;
         }
     }
-
+    private static Double parseDoubleOrNull(Object val) {
+        try {
+            return val != null ? Double.parseDouble(val.toString()) : null;
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
     private float convertRaceToFloat(String race) {
         switch (race) {
             case "Caucasian": return 0f;
