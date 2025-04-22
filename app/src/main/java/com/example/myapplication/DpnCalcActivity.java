@@ -49,7 +49,7 @@ public class DpnCalcActivity extends AppCompatActivity {
     private TextInputEditText numberDiagnosesInput;
     private TextInputEditText heightInput;
     private TextInputEditText weightInput;
-    private CheckBox metforminCheckbox, insulinCheckbox, diabetesMedCheckbox;
+    private CheckBox metforminCheckbox, insulinCheckbox, diabetesMedCheckbox, changeMedCheckbox;
     private TextView resultText;
     private Button calculateButton;
 
@@ -94,6 +94,7 @@ public class DpnCalcActivity extends AppCompatActivity {
         metforminCheckbox = findViewById(R.id.metforminCheckbox);
         insulinCheckbox = findViewById(R.id.insulinCheckbox);
         diabetesMedCheckbox = findViewById(R.id.diabetesMedCheckbox);
+        changeMedCheckbox = findViewById(R.id.changeMedCheckbox);
 
         resultText = findViewById(R.id.resultText);
         calculateButton = findViewById(R.id.calculateButton);
@@ -301,6 +302,7 @@ public class DpnCalcActivity extends AppCompatActivity {
         patientData.put("insulin", insulinCheckbox.isChecked() ? "Steady" : "No");
         patientData.put("metformin", metforminCheckbox.isChecked() ? "Steady" : "No");
         patientData.put("diabetesMed", diabetesMedCheckbox.isChecked() ? "Yes" : "No");
+        patientData.put("change", changeMedCheckbox.isChecked() ? "Ch" : "No");
 
         patientData.put("age", ageInput.getText().toString());
         patientData.put("num_lab_procedures", numLabProceduresInput.getText().toString());
@@ -469,6 +471,7 @@ public class DpnCalcActivity extends AppCompatActivity {
         String insulin = patientData.getOrDefault("insulin", "");
         String metformin = patientData.getOrDefault("metformin", "");
         String maxGluSerum = patientData.getOrDefault("max_glu_serum", "");
+        String change = patientData.getOrDefault("change", "");
 
         // A1C & Glucose score
         if (a1cMap.containsKey(a1cResult)) {
@@ -485,7 +488,9 @@ public class DpnCalcActivity extends AppCompatActivity {
         if ("Steady".equals(metformin) || "Up".equals(metformin)) {
             score += 1.0;
         }
-
+        if ("Ch".equals(change)) {
+            score += 0.8;
+        }
         int numEmergency = parseIntOrZero(patientData.get("number_emergency"));
         int numInpatient = parseIntOrZero(patientData.get("number_inpatient"));
         if (numEmergency > 0) score += 0.5 * Math.min(numEmergency, 3);
@@ -554,7 +559,7 @@ public class DpnCalcActivity extends AppCompatActivity {
         }
     }
     private float[] preprocessInput() {
-        float[] input = new float[16];
+        float[] input = new float[17];
 
         try {
             input[0] = convertRaceToFloat(raceDropdown.getText().toString());
@@ -591,15 +596,15 @@ public class DpnCalcActivity extends AppCompatActivity {
                     PreprocessingConstants.NUM_INPATIENT_MEAN,
                     PreprocessingConstants.NUM_INPATIENT_STD
             );
-
-            input[8] = convertA1CResultToFloat(a1cResultDropdown.getText().toString());
-            input[9] = metforminCheckbox.isChecked() ? 1.0f : 0.0f;
-            input[10] = insulinCheckbox.isChecked() ? 1.0f : 0.0f;
-            input[11] = diabetesMedCheckbox.isChecked() ? 1.0f : 0.0f;
-            input[12] = convertMaxGluSerumToFloat(maxGluSerumDropdown.getText().toString());
-            input[13] = parseFloatSafely(heightInput.getText().toString()) / 100.0f;
-            input[14] = parseFloatSafely(weightInput.getText().toString());
-            input[15] = calculateBmi();
+            input[8] = convertMaxGluSerumToFloat(maxGluSerumDropdown.getText().toString());
+            input[9] = convertA1CResultToFloat(a1cResultDropdown.getText().toString());
+            input[10] = metforminCheckbox.isChecked() ? 1.0f : 0.0f;
+            input[11] = insulinCheckbox.isChecked() ? 1.0f : 0.0f;
+            input[12] = diabetesMedCheckbox.isChecked() ? 1.0f : 0.0f;
+            input[13] = changeMedCheckbox.isChecked() ? 1.0f : 0.0f;
+            input[14] = parseFloatSafely(heightInput.getText().toString()) / 100.0f;
+            input[15] = parseFloatSafely(weightInput.getText().toString());
+            input[16] = calculateBmi();
 
         } catch (Exception e) {
             Log.e("PreprocessInput", "Error processing inputs: " + e.getMessage());
@@ -640,6 +645,7 @@ public class DpnCalcActivity extends AppCompatActivity {
             ((CheckBox) findViewById(R.id.metforminCheckbox)).setChecked(false);
             ((CheckBox) findViewById(R.id.insulinCheckbox)).setChecked(false);
             ((CheckBox) findViewById(R.id.diabetesMedCheckbox)).setChecked(false);
+            ((CheckBox) findViewById(R.id.changeMedCheckbox)).setChecked(false);
 
             ((AutoCompleteTextView) findViewById(R.id.readmittedSpinner)).setText("", false);
 

@@ -432,7 +432,6 @@
                 android:inputType="number"/>
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Lab Results Section -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -490,7 +489,6 @@
                 android:inputType="none"/>
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Medications Section -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -529,7 +527,15 @@
             android:buttonTint="@color/checkbox_color"
             android:text="Obat-obatan Diabetes Lainnya"/>
 
-        <!-- Readmission Section -->
+        <CheckBox
+            android:id="@+id/changeMedCheckbox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textColorHint="?android:attr/textColorHint"
+            android:buttonTint="@color/checkbox_color"
+            android:text="Perubahan Pengobatan"/>
+
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

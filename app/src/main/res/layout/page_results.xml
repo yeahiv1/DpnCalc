@@ -119,7 +119,8 @@
                     android:textColor="@color/black"
                     android:textStyle="bold"
                     android:textSize="18sp"
-                    android:layout_marginBottom="8dp"/>
+                    android:layout_marginBottom="8dp"
+                    android:gravity="center"/>
 
                 <TextView
                     android:id="@+id/disclaimer_text"
@@ -127,7 +128,9 @@
                     android:layout_height="wrap_content"
                     android:textColor="@color/black"
                     android:text="Skor risiko DPN ini bertujuan untuk edukasi dan bukan diagnosis medis dan tidak boleh digunakan sebagai pengganti saran medis, diagnosis, atau perawatan profesional. Konsultasikan dengan penyedia layanan kesehatan untuk setiap masalah terkait kesehatan Anda."
-                    android:textSize="16sp"/>
+                    android:textSize="16sp"
+                    android:lineSpacingExtra="2dp"
+                    android:gravity="start"/>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
         <Button
