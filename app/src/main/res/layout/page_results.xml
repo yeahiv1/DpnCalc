@@ -127,6 +127,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textColor="@color/black"
+                    android:paddingLeft="2dp"
                     android:text="Skor risiko DPN ini bertujuan untuk edukasi dan bukan diagnosis medis dan tidak boleh digunakan sebagai pengganti saran medis, diagnosis, atau perawatan profesional. Konsultasikan dengan penyedia layanan kesehatan untuk setiap masalah terkait kesehatan Anda."
                     android:textSize="16sp"
                     android:lineSpacingExtra="2dp"

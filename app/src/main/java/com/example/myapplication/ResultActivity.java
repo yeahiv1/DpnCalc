@@ -1,5 +1,4 @@
 package com.example.myapplication;
-
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
@@ -8,9 +7,14 @@ import android.widget.Button;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
-
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.function.Predicate;
 
 public class ResultActivity extends AppCompatActivity {
     private TextView riskLevelText;
@@ -94,51 +98,63 @@ public class ResultActivity extends AppCompatActivity {
     }
 
     private void displayRecommendations(String riskLevel) {
-        StringBuilder recommendations = new StringBuilder();
+        Map<String, List<String>> recommendationMap = new HashMap<>();
 
-        if (riskLevel.equalsIgnoreCase("Low Risk")) {
-            recommendations.append("• Lanjutkan perawatan diabetes secara rutin\n");
-            recommendations.append("• Lakukan pemeriksaan kaki tahunan\n");
-            recommendations.append("• Pantau perubahan pada sensasi kaki\n");
-            recommendations.append("• Jaga kebersihan kaki dan gunakan pelembap\n");
-            recommendations.append("• Gunakan sepatu yang pas dan nyaman");
-        } else if (riskLevel.equalsIgnoreCase("Medium Risk")) {
-            recommendations.append("• Jadwalkan kunjungan kontrol dalam 3 bulan\n");
-            recommendations.append("• Pertimbangkan penggunaan alas kaki khusus\n");
-            recommendations.append("• Lakukan pemeriksaan kaki harian\n");
-            recommendations.append("• Tinjau kembali pengelolaan gula darah\n");
-            recommendations.append("• Hindari berjalan tanpa alas kaki\n");
-            recommendations.append("• Pertimbangkan suplemen vitamin B");
-        } else if (riskLevel.equalsIgnoreCase("High Risk")) {
-            recommendations.append("• Segera rujuk ke dokter spesialis kaki (podiatris)\n");
-            recommendations.append("• Wajib menggunakan alas kaki pelindung\n");
-            recommendations.append("• Tingkatkan pemantauan gula darah\n");
-            recommendations.append("• Lakukan pemeriksaan kaki klinis setiap bulan\n");
-            recommendations.append("• Pertimbangkan konsultasi neurologi\n");
-            recommendations.append("• Lakukan penilaian manajemen nyeri\n");
-            recommendations.append("• Disarankan evaluasi pembuluh darah");
+        recommendationMap.put("low risk", Collections.unmodifiableList(Arrays.asList(
+                "• Lanjutkan perawatan diabetes secara rutin",
+                "• Lakukan pemeriksaan kaki tahunan",
+                "• Pantau perubahan pada sensasi kaki",
+                "• Jaga kebersihan kaki dan gunakan pelembap",
+                "• Gunakan sepatu yang pas dan nyaman"
+        )));
+
+        recommendationMap.put("medium risk", Collections.unmodifiableList(Arrays.asList(
+                "• Jadwalkan kunjungan kontrol dalam 3 bulan",
+                "• Pertimbangkan penggunaan alas kaki khusus",
+                "• Lakukan pemeriksaan kaki harian",
+                "• Tinjau kembali pengelolaan gula darah",
+                "• Hindari berjalan tanpa alas kaki",
+                "• Pertimbangkan suplemen vitamin B"
+        )));
+
+        recommendationMap.put("high risk", Collections.unmodifiableList(Arrays.asList(
+                "• Segera rujuk ke dokter spesialis kaki (podiatris)",
+                "• Wajib menggunakan alas kaki pelindung",
+                "• Tingkatkan pemantauan gula darah",
+                "• Lakukan pemeriksaan kaki klinis setiap bulan",
+                "• Pertimbangkan konsultasi neurologi",
+                "• Lakukan penilaian manajemen nyeri",
+                "• Disarankan evaluasi pembuluh darah"
+        )));
+
+        List<String> recs = recommendationMap.get(riskLevel.toLowerCase(Locale.ROOT));
+        if (recs != null) {
+            StringBuilder joined = new StringBuilder();
+            for (int i = 0; i < recs.size(); i++) {
+                joined.append(recs.get(i));
+                if (i < recs.size() - 1) {
+                    joined.append("\n");
+                }
+            }
+            recommendationsText.setText(joined.toString());
+        } else {
+            recommendationsText.setText("Tidak ada rekomendasi untuk kategori risiko ini.");
         }
-        recommendationsText.setText(recommendations.toString());
     }
+
     private String[] determineContributingFactors(HashMap<String, String> patientData) {
         ArrayList<String> factors = new ArrayList<>();
 
-        try {
-            float bmi = Float.parseFloat(patientData.get("bmi"));
-            if (bmi >= 30) {
-                factors.add("Obesitas (BMI: " + bmi + ")");
-            } else if (bmi >= 25) {
-                factors.add("Overweight (BMI: " + bmi + ")");
-            }
-        } catch (NumberFormatException | NullPointerException e) {
-            // Skip
+        float bmi = parseSafeFloat(patientData.get("bmi"));
+        if (bmi >= 30) {
+            factors.add("Obesitas (BMI: " + bmi + ")");
+        } else if (bmi >= 25) {
+            factors.add("Overweight (BMI: " + bmi + ")");
         }
 
         String a1cResult = patientData.get("A1Cresult");
-        if (a1cResult != null) {
-            if (a1cResult.equals(">8") || a1cResult.equals(">7")) {
-                factors.add("Kontrol glikemik yang buruk (A1C: " + a1cResult + ")");
-            }
+        if (">8".equals(a1cResult) || ">7".equals(a1cResult)) {
+            factors.add("Kontrol glikemik yang buruk (A1C: " + a1cResult + ")");
         }
 
         boolean onInsulin = "Steady".equals(patientData.get("insulin"));
@@ -155,60 +171,40 @@ public class ResultActivity extends AppCompatActivity {
             factors.add("Menggunakan obat diabetes");
         }
 
-        try {
-            int emergencyVisits = Integer.parseInt(patientData.get("number_emergency"));
-            if (emergencyVisits > 0) {
-                factors.add("Kunjungan darurat (" + emergencyVisits + ")");
-            }
-        } catch (NumberFormatException | NullPointerException e) {
-            // Skip if value is invalid
+        int emergencyVisits = parseSafeInt(patientData.get("number_emergency"));
+        if (emergencyVisits > 0) {
+            factors.add("Kunjungan darurat (" + emergencyVisits + ")");
         }
 
-        try {
-            int inpatientVisits = Integer.parseInt(patientData.get("number_inpatient"));
-            if (inpatientVisits > 0) {
-                factors.add("Rawat Inap (" + inpatientVisits + ")");
-            }
-        } catch (NumberFormatException | NullPointerException e) {
-            // Skip if value is invalid
+        int inpatientVisits = parseSafeInt(patientData.get("number_inpatient"));
+        if (inpatientVisits > 0) {
+            factors.add("Rawat Inap (" + inpatientVisits + ")");
         }
 
-        try {
-            int outpatientVisits = Integer.parseInt(patientData.get("number_outpatient"));
-            if (outpatientVisits > 2) {
-                factors.add("Beberapa kunjungan rawat jalan (" + outpatientVisits + ")");
-            }
-        } catch (NumberFormatException | NullPointerException e) {
-            // Skip if value is invalid
+        int outpatientVisits = parseSafeInt(patientData.get("number_outpatient"));
+        if (outpatientVisits > 2) {
+            factors.add("Beberapa kunjungan rawat jalan (" + outpatientVisits + ")");
         }
 
-        try {
-            int age = Integer.parseInt(patientData.get("age"));
-            if (age > 65) {
-                factors.add("Usia lanjut (" + age + " tahun)");
-            } else if (age > 50) {
-                factors.add("Usia diatas 50 (" + age + " tahun)");
-            }
-        } catch (NumberFormatException | NullPointerException e) {
-            // Skip if age value is invalid
+        int age = parseSafeInt(patientData.get("age"));
+        if (age > 65) {
+            factors.add("Usia lanjut (" + age + " tahun)");
+        } else if (age > 50) {
+            factors.add("Usia diatas 50 (" + age + " tahun)");
         }
 
-        String diag1 = patientData.get("diag_1");
-        String diag2 = patientData.get("diag_2");
-        String diag3 = patientData.get("diag_3");
+        String[] diags = { patientData.get("diag_1"), patientData.get("diag_2"), patientData.get("diag_3") };
 
-        if (containsNeuropathyCode(diag1) || containsNeuropathyCode(diag2) || containsNeuropathyCode(diag3)) {
+        if (anyMatches(diags, this::containsNeuropathyCode)) {
             factors.add("Ada diagnosis Neuropati");
         }
-        if (containsDiabetesCode(diag1) || containsDiabetesCode(diag2) || containsDiabetesCode(diag3)) {
+        if (anyMatches(diags, this::containsDiabetesCode)) {
             factors.add("Ada diagnosis Diabetes");
         }
-
-        if (containsVascularDiseaseCode(diag1) || containsVascularDiseaseCode(diag2) || containsVascularDiseaseCode(diag3)) {
+        if (anyMatches(diags, this::containsVascularDiseaseCode)) {
             factors.add("Penyakit pembuluh darah perifer");
         }
-
-        if (containsRenalDiseaseCode(diag1) || containsRenalDiseaseCode(diag2) || containsRenalDiseaseCode(diag3)) {
+        if (anyMatches(diags, this::containsRenalDiseaseCode)) {
             factors.add("Penyakit ginjal");
         }
 
@@ -282,6 +278,30 @@ public class ResultActivity extends AppCompatActivity {
         };
         for (String code : renalCodes) {
             if (diagCode.startsWith(code)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    private int parseSafeInt(String value) {
+        try {
+            return Integer.parseInt(value);
+        } catch (Exception e) {
+            return -1;
+        }
+    }
+
+    private float parseSafeFloat(String value) {
+        try {
+            return Float.parseFloat(value);
+        } catch (Exception e) {
+            return -1;
+        }
+    }
+
+    private boolean anyMatches(String[] values, Predicate<String> checker) {
+        for (String val : values) {
+            if (val != null && checker.test(val)) {
                 return true;
             }
         }
