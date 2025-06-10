@@ -19,6 +19,7 @@ import java.util.function.Predicate;
 public class ResultActivity extends AppCompatActivity {
     private TextView riskLevelText;
     private TextView riskFactorsText;
+    private TextView symptomsText;
     private TextView recommendationsText;
     private Button returnButton;
 
@@ -29,6 +30,7 @@ public class ResultActivity extends AppCompatActivity {
 
         riskLevelText = findViewById(R.id.risk_level_text);
         riskFactorsText = findViewById(R.id.risk_factors_text);
+        symptomsText = findViewById(R.id.symptoms_text);
         recommendationsText = findViewById(R.id.recommendations_text);
         returnButton = findViewById(R.id.return_button);
 
@@ -38,6 +40,7 @@ public class ResultActivity extends AppCompatActivity {
 
         HashMap<String, String> patientData =
                 (HashMap<String, String>) intent.getSerializableExtra("patientData");
+        ArrayList<String> selectedSymptoms = intent.getStringArrayListExtra("selectedSymptoms");
 
         displayRiskLevel(dpnRiskScore, dpnRiskLevel);
 
@@ -66,6 +69,15 @@ public class ResultActivity extends AppCompatActivity {
         }
         if (dpnRiskLevel != null) {
             displayRecommendations(dpnRiskLevel);
+        }
+        if (selectedSymptoms != null && !selectedSymptoms.isEmpty()) {
+            StringBuilder symptomsBuilder = new StringBuilder();
+            for (String symptom : selectedSymptoms) {
+                symptomsBuilder.append("• ").append(symptom).append("\n");
+            }
+            symptomsText.setText(symptomsBuilder.toString());
+        } else {
+            symptomsText.setText("Tidak ada gejala yang dilaporkan.");
         }
 
         returnButton.setOnClickListener(v -> finish());

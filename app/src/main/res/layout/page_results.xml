@@ -64,7 +64,39 @@
                     android:textSize="16sp"/>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="4dp">
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@color/white"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Gejala yang Dilaporkan"
+                    android:textColor="@color/black"
+                    android:textStyle="bold"
+                    android:textSize="18sp"
+                    android:layout_marginBottom="8dp"/>
+
+                <TextView
+                    android:id="@+id/symptoms_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/black"
+                    android:text="Gejala yang dilaporkan berdasarkan hasil input Anda."
+                    android:textSize="16sp"/>
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -128,7 +160,7 @@
                     android:layout_height="wrap_content"
                     android:textColor="@color/black"
                     android:paddingLeft="2dp"
-                    android:text="Skor risiko DPN ini bertujuan untuk edukasi dan bukan diagnosis medis dan tidak boleh digunakan sebagai pengganti saran medis, diagnosis, atau perawatan profesional. Konsultasikan dengan penyedia layanan kesehatan untuk setiap masalah terkait kesehatan Anda."
+                    android:text="Skor risiko DPN bukan diagnosis medis resmi dan tidak boleh digunakan sebagai pengganti saran medis atau perawatan profesional. Konsultasikan dengan penyedia layanan kesehatan untuk setiap masalah terkait kesehatan Anda."
                     android:textSize="16sp"
                     android:lineSpacingExtra="2dp"
                     android:gravity="start"/>

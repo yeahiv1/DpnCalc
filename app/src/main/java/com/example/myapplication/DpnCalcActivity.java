@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import android.widget.Toast;
@@ -36,7 +37,7 @@ import java.util.Set;
 public class DpnCalcActivity extends AppCompatActivity {
     private OrtEnvironment ortEnvironment;
     private OrtSession ortSession;
-    private static final String MODEL_NAME = "model_2 (2).onnx";
+    private static final String MODEL_NAME = "model_1 (3).onnx";
 
     private AutoCompleteTextView raceDropdown, genderDropdown, maxGluSerumDropdown,
             a1cResultDropdown, readmittedDropdown,  diag1Input, diag2Input, diag3Input;
@@ -50,6 +51,7 @@ public class DpnCalcActivity extends AppCompatActivity {
     private TextInputEditText heightInput;
     private TextInputEditText weightInput;
     private CheckBox metforminCheckbox, insulinCheckbox, diabetesMedCheckbox, changeMedCheckbox;
+    private CheckBox kesemutanCheckbox, matirasaCheckbox, senspanasCheckbox, nyeriCheckbox, lemahototCheckbox, jarumCheckbox;
     private TextView resultText;
     private Button calculateButton;
 
@@ -95,6 +97,13 @@ public class DpnCalcActivity extends AppCompatActivity {
         insulinCheckbox = findViewById(R.id.insulinCheckbox);
         diabetesMedCheckbox = findViewById(R.id.diabetesMedCheckbox);
         changeMedCheckbox = findViewById(R.id.changeMedCheckbox);
+
+        kesemutanCheckbox = findViewById(R.id.kesemutanCheckbox);
+        matirasaCheckbox = findViewById(R.id.matirasaCheckbox);
+        senspanasCheckbox = findViewById(R.id.senspanasCheckbox);
+        nyeriCheckbox = findViewById(R.id.nyeriCheckbox);
+        lemahototCheckbox = findViewById(R.id.lemahototCheckbox);
+        jarumCheckbox = findViewById(R.id.jarumCheckbox);
 
         resultText = findViewById(R.id.resultText);
         calculateButton = findViewById(R.id.calculateButton);
@@ -153,11 +162,11 @@ public class DpnCalcActivity extends AppCompatActivity {
     }
 
     private void setupDropdowns() {
-        String[] raceItems = {"Caucasian", "African American", "Asian", "Hispanic", "Other"};
-        String[] genderItems = {"Male", "Female", "Other"};
-        String[] maxGluSerumItems = {">200", ">300", "Normal", "None"};
-        String[] a1cResultItems = {">7", ">8", "Normal", "None"};
-        String[] readmittedItems = {"No", "<30 days", ">30 days"};
+        String[] raceItems = RACE_MAP.keySet().toArray(new String[0]);
+        String[] genderItems = GENDER_MAP.keySet().toArray(new String[0]);
+        String[] maxGluSerumItems = MAX_GLUCOSE_MAP.keySet().toArray(new String[0]);
+        String[] a1cResultItems = A1C_RESULT_MAP.keySet().toArray(new String[0]);
+        String[] readmittedItems = READMITTED_MAP.keySet().toArray(new String[0]);
         String[] diagnosisItems = {
                 "250 - Diabetes melitus",
                 "250.01 - Diabetes melitus tipe 1",
@@ -280,15 +289,59 @@ public class DpnCalcActivity extends AppCompatActivity {
         GLU_RESULT.put(">200", 2.0f);
         GLU_RESULT.put(">300", 3.0f);
     }
+    public static final Map<String, String> RACE_MAP;
+    public static final Map<String, String> GENDER_MAP;
+    public static final Map<String, String> MAX_GLUCOSE_MAP;
+    public static final Map<String, String> A1C_RESULT_MAP;
+    public static final Map<String, String> READMITTED_MAP;
+
+    static {
+        RACE_MAP = new LinkedHashMap<>();
+        RACE_MAP.put("Kulit Putih", "Caucasian");
+        RACE_MAP.put("Kulit Hitam", "African American");
+        RACE_MAP.put("Asia", "Asian");
+        RACE_MAP.put("Hispanik", "Hispanic");
+        RACE_MAP.put("Lainnya", "Other");
+
+        GENDER_MAP = new LinkedHashMap<>();
+        GENDER_MAP.put("Laki-laki", "Male");
+        GENDER_MAP.put("Perempuan", "Female");
+        GENDER_MAP.put("Lainnya", "Other");
+
+        MAX_GLUCOSE_MAP = new LinkedHashMap<>();
+        MAX_GLUCOSE_MAP.put(">200", ">200");
+        MAX_GLUCOSE_MAP.put(">300", ">300");
+        MAX_GLUCOSE_MAP.put("Normal", "Normal");
+        MAX_GLUCOSE_MAP.put("Tidak Ada", "None");
+
+        A1C_RESULT_MAP = new LinkedHashMap<>();
+        A1C_RESULT_MAP.put(">7", ">7");
+        A1C_RESULT_MAP.put(">8", ">8");
+        A1C_RESULT_MAP.put("Normal", "Normal");
+        A1C_RESULT_MAP.put("Tidak Ada", "None");
+
+        READMITTED_MAP = new LinkedHashMap<>();
+        READMITTED_MAP.put("Tidak", "No");
+        READMITTED_MAP.put("<30 hari", "<30 days");
+        READMITTED_MAP.put(">30 hari", ">30 days");
+    }
+
     private void calculateAndDisplayRisk() {
         if (!validateInputs()) {
             return;
         }
+        String diag1 = extractDiagnosisCode(diag1Input.getText().toString());
+        String diag2 = extractDiagnosisCode(diag2Input.getText().toString());
+        String diag3 = extractDiagnosisCode(diag3Input.getText().toString());
+        if (hasDuplicateDiagnoses(diag1, diag2, diag3)) {
+            Toast.makeText(this, "Diagnosis tidak boleh sama", Toast.LENGTH_SHORT).show();
+            return;
+        }
         HashMap<String, String> patientData = new HashMap<>();
 
-        patientData.put("diag_1", extractDiagnosisCode(diag1Input.getText().toString()));
-        patientData.put("diag_2", extractDiagnosisCode(diag2Input.getText().toString()));
-        patientData.put("diag_3", extractDiagnosisCode(diag3Input.getText().toString()));
+        patientData.put("diag_1", diag1);
+        patientData.put("diag_2", diag2);
+        patientData.put("diag_3", diag3);
 
         float bmi = calculateBmi();
         patientData.put("bmi", String.valueOf(bmi));
@@ -312,6 +365,7 @@ public class DpnCalcActivity extends AppCompatActivity {
         patientData.put("number_inpatient", numberInpatientInput.getText().toString());
         patientData.put("number_diagnoses", numberDiagnosesInput.getText().toString());
 
+        ArrayList<String> selectedSymptoms = getSelectedSymptoms();
         double dpnRisk = calculateDPNRisk(patientData);
         String riskLevel = interpretDPNRiskScore(dpnRisk);
 
@@ -327,6 +381,7 @@ public class DpnCalcActivity extends AppCompatActivity {
         intent.putExtra("dpnRiskScore", dpnRisk);
         intent.putExtra("dpnRiskLevel", riskLevel);
         intent.putExtra("patientData", patientData);
+        intent.putStringArrayListExtra("selectedSymptoms", selectedSymptoms);
 
         startActivity(intent);
     }
@@ -491,8 +546,11 @@ public class DpnCalcActivity extends AppCompatActivity {
         if ("Ch".equals(change)) {
             score += 0.8;
         }
+
+        int numOutpatient = parseIntOrZero(patientData.get("number_outpatient"));
         int numEmergency = parseIntOrZero(patientData.get("number_emergency"));
         int numInpatient = parseIntOrZero(patientData.get("number_inpatient"));
+
         if (numEmergency > 0) score += 0.5 * Math.min(numEmergency, 3);
         if (numInpatient > 0) score += 0.5 * Math.min(numInpatient, 3);
 
@@ -543,6 +601,15 @@ public class DpnCalcActivity extends AppCompatActivity {
         if (numInpatient > 0) riskFactorCount++;
 
         interactionScore += Math.min(Math.max(riskFactorCount - 2, 0), 4) * 0.2;
+
+        int totalVisits = numOutpatient + numEmergency + numInpatient;
+        double hospitalizationRatio = 0.0;
+        if (totalVisits > 0) {
+            hospitalizationRatio = (double) numInpatient / totalVisits;
+            hospitalizationRatio = Math.min(hospitalizationRatio, 1.0);
+        }
+        score += hospitalizationRatio * 2.0;
+
 
         return score + interactionScore;
     }
@@ -646,6 +713,12 @@ public class DpnCalcActivity extends AppCompatActivity {
             ((CheckBox) findViewById(R.id.insulinCheckbox)).setChecked(false);
             ((CheckBox) findViewById(R.id.diabetesMedCheckbox)).setChecked(false);
             ((CheckBox) findViewById(R.id.changeMedCheckbox)).setChecked(false);
+            ((CheckBox) findViewById(R.id.kesemutanCheckbox)).setChecked(false);
+            ((CheckBox) findViewById(R.id.matirasaCheckbox)).setChecked(false);
+            ((CheckBox) findViewById(R.id.senspanasCheckbox)).setChecked(false);
+            ((CheckBox) findViewById(R.id.nyeriCheckbox)).setChecked(false);
+            ((CheckBox) findViewById(R.id.lemahototCheckbox)).setChecked(false);
+            ((CheckBox) findViewById(R.id.jarumCheckbox)).setChecked(false);
 
             ((AutoCompleteTextView) findViewById(R.id.readmittedSpinner)).setText("", false);
 
@@ -774,6 +847,30 @@ public class DpnCalcActivity extends AppCompatActivity {
 
         return diagDropdownValue;
     }
+    private boolean hasDuplicateDiagnoses(String d1, String d2, String d3) {
+        Set<String> set = new HashSet<>();
+        if (!d1.isEmpty()) set.add(d1);
+        if (!d2.isEmpty()) set.add(d2);
+        if (!d3.isEmpty()) set.add(d3);
+        int nonEmptyCount = 0;
+        if (!d1.isEmpty()) nonEmptyCount++;
+        if (!d2.isEmpty()) nonEmptyCount++;
+        if (!d3.isEmpty()) nonEmptyCount++;
+        return set.size() < nonEmptyCount;
+    }
+    private ArrayList<String> getSelectedSymptoms() {
+        ArrayList<String> selectedSymptoms = new ArrayList<>();
+
+        if (kesemutanCheckbox.isChecked()) selectedSymptoms.add("Kesemutan");
+        if (matirasaCheckbox.isChecked()) selectedSymptoms.add("Mati rasa");
+        if (senspanasCheckbox.isChecked()) selectedSymptoms.add("Sensasi terbakar");
+        if (nyeriCheckbox.isChecked()) selectedSymptoms.add("Nyeri di kaki/tangan");
+        if (lemahototCheckbox.isChecked()) selectedSymptoms.add("Lemah otot");
+        if (jarumCheckbox.isChecked()) selectedSymptoms.add("Sensasi ditusuk jarum");
+
+        return selectedSymptoms;
+    }
+
 
     private float standardizeValue(float value, float mean, float std) {
         return (value - mean) / std;
@@ -789,7 +886,9 @@ public class DpnCalcActivity extends AppCompatActivity {
     private boolean validateInputs() {
         if (ageInput.getText().toString().isEmpty() ||
                 raceDropdown.getText().toString().isEmpty() ||
-                genderDropdown.getText().toString().isEmpty()) {
+                genderDropdown.getText().toString().isEmpty() ||
+                heightInput.getText().toString().isEmpty() ||
+                weightInput.getText().toString().isEmpty()) {
             Toast.makeText(this, "Harap isi semua kolom yang diperlukan",
                     Toast.LENGTH_SHORT).show();
             return false;

@@ -184,7 +184,11 @@
                 android:hint="BMI"
                 android:textColor="?android:attr/textColorPrimary"
                 android:textColorHint="?android:attr/textColorHint"
-                android:inputType="numberDecimal"/>
+                android:focusable="false"
+                android:cursorVisible="false"
+                android:clickable="false"
+                android:longClickable="false"
+                android:inputType="none"/>
         </com.google.android.material.textfield.TextInputLayout>
 
         <Button
@@ -205,6 +209,14 @@
             android:textSize="18sp"
             android:layout_marginTop="16dp"
             android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Jumlah tindakan medis yang dilakukan selama perawatan."
+            android:textColor="#808080"
+            android:textSize="12sp"
+            android:layout_marginBottom="8dp" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
@@ -267,13 +279,20 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Informasi Kunjung"
+            android:text="Informasi Kunjungan Rumah Sakit"
             android:textColor="?android:attr/textColorPrimary"
             android:textColorHint="?android:attr/textColorHint"
             android:textStyle="bold"
             android:textSize="18sp"
             android:layout_marginTop="16dp"
             android:layout_marginBottom="8dp"/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Riwayat kunjungan rumah sakit pasien."
+            android:textColor="#808080"
+            android:textSize="12sp"
+            android:layout_marginBottom="8dp" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
@@ -336,13 +355,20 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Informasi Diagnosis (Kode ICD9)"
+            android:text="Informasi Diagnosis"
             android:textColor="?android:attr/textColorPrimary"
             android:textColorHint="?android:attr/textColorHint"
             android:textStyle="bold"
             android:textSize="18sp"
             android:layout_marginTop="16dp"
             android:layout_marginBottom="8dp"/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Informasi diagnosis sesuai kondisi kesehatan pasien."
+            android:textColor="#808080"
+            android:textSize="12sp"
+            android:layout_marginBottom="8dp" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
@@ -442,6 +468,13 @@
             android:textSize="18sp"
             android:layout_marginTop="16dp"
             android:layout_marginBottom="8dp"/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Data hasil pemeriksaan laboratorium pasien."
+            android:textColor="#808080"
+            android:textSize="12sp"
+            android:layout_marginBottom="8dp" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
@@ -499,6 +532,13 @@
             android:textSize="18sp"
             android:layout_marginTop="16dp"
             android:layout_marginBottom="8dp"/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Obat yang dikonsumsi pasien selama perawatan."
+            android:textColor="#808080"
+            android:textSize="12sp"
+            android:layout_marginBottom="8dp" />
 
         <CheckBox
             android:id="@+id/metforminCheckbox"
@@ -525,7 +565,7 @@
             android:textColor="?android:attr/textColorPrimary"
             android:textColorHint="?android:attr/textColorHint"
             android:buttonTint="@color/checkbox_color"
-            android:text="Obat-obatan Diabetes Lainnya"/>
+            android:text="Obat Diabetes Lainnya"/>
 
         <CheckBox
             android:id="@+id/changeMedCheckbox"
@@ -534,7 +574,71 @@
             android:textColor="?android:attr/textColorPrimary"
             android:textColorHint="?android:attr/textColorHint"
             android:buttonTint="@color/checkbox_color"
-            android:text="Perubahan Pengobatan"/>
+            android:text="Ada Perubahan Pengobatan"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Gejala yang Dirasakan"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textColorHint="?android:attr/textColorHint"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="8dp"/>
+
+        <CheckBox
+            android:id="@+id/kesemutanCheckbox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textColorHint="?android:attr/textColorHint"
+            android:buttonTint="@color/checkbox_color"
+            android:text="Kesemutan"/>
+
+        <CheckBox
+            android:id="@+id/matirasaCheckbox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textColorHint="?android:attr/textColorHint"
+            android:buttonTint="@color/checkbox_color"
+            android:text="Mati rasa"/>
+
+        <CheckBox
+            android:id="@+id/senspanasCheckbox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textColorHint="?android:attr/textColorHint"
+            android:buttonTint="@color/checkbox_color"
+            android:text="Sensasi panas atau terbakar"/>
+
+        <CheckBox
+            android:id="@+id/nyeriCheckbox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textColorHint="?android:attr/textColorHint"
+            android:buttonTint="@color/checkbox_color"
+            android:text="Nyeri di kaki/tangan"/>
+        <CheckBox
+            android:id="@+id/lemahototCheckbox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textColorHint="?android:attr/textColorHint"
+            android:buttonTint="@color/checkbox_color"
+            android:text="Lemah otot"/>
+
+        <CheckBox
+            android:id="@+id/jarumCheckbox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textColorHint="?android:attr/textColorHint"
+            android:buttonTint="@color/checkbox_color"
+            android:text="Sensasi seperti ditusuk jarum"/>
 
         <TextView
             android:layout_width="match_parent"
@@ -546,6 +650,13 @@
             android:textSize="18sp"
             android:layout_marginTop="16dp"
             android:layout_marginBottom="8dp"/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Status rawat ulang pasien."
+            android:textColor="#808080"
+            android:textSize="12sp"
+            android:layout_marginBottom="8dp" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"

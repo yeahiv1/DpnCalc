@@ -13,7 +13,6 @@ public class SplashActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
 
-        // Delay and move to MainActivity
         new Handler().postDelayed(() -> {
             Intent i = new Intent(SplashActivity.this, MainActivity.class);
             startActivity(i);
