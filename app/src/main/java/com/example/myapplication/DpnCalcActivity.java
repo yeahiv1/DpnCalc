@@ -42,7 +42,9 @@ public class DpnCalcActivity extends AppCompatActivity {
     private AutoCompleteTextView raceDropdown, genderDropdown, maxGluSerumDropdown,
             a1cResultDropdown, readmittedDropdown,  diag1Input, diag2Input, diag3Input;
     private TextInputEditText ageInput;
+
     private TextInputEditText numLabProceduresInput;
+    private TextInputEditText numProceduresInput;
     private TextInputEditText numMedicationsInput;
     private TextInputEditText numberOutpatientInput;
     private TextInputEditText numberEmergencyInput;
@@ -83,7 +85,7 @@ public class DpnCalcActivity extends AppCompatActivity {
         weightInput = findViewById(R.id.weightInput);
         findViewById(R.id.bmiInput);
         numLabProceduresInput = findViewById(R.id.numLabProceduresInput);
-        findViewById(R.id.numProceduresInput);
+        numProceduresInput = findViewById(R.id.numProceduresInput);
         numMedicationsInput = findViewById(R.id.numMedicationsInput);
         numberOutpatientInput = findViewById(R.id.numberOutpatientInput);
         numberEmergencyInput = findViewById(R.id.numberEmergencyInput);
@@ -250,12 +252,16 @@ public class DpnCalcActivity extends AppCompatActivity {
     public class PreprocessingConstants {
         public static final float NUM_LAB_PROCEDURES_MEAN = 43.09564f;
         public static final float NUM_LAB_PROCEDURES_STD = 19.67427f;
+        public static final float NUM_PROCEDURES_MEAN = 43.09564f;
+        public static final float NUM_PROCEDURES_STD = 19.67427f;
 
         public static final float NUM_MEDICATIONS_MEAN = 16.02184f;
         public static final float NUM_MEDICATIONS_STD = 8.12753f;
 
         public static final float NUM_DIAGNOSES_MEAN = 7.42261f;
         public static final float NUM_DIAGNOSES_STD = 1.93359f;
+        public static final float NUM_OUTPATIENT_MEAN = 0.63557f;
+        public static final float NUM_OUTPATIENT_STD = 1.26286f;
 
         public static final float NUM_EMERGENCY_MEAN = 0.19784f;
         public static final float NUM_EMERGENCY_STD = 0.93047f;
@@ -626,7 +632,7 @@ public class DpnCalcActivity extends AppCompatActivity {
         }
     }
     private float[] preprocessInput() {
-        float[] input = new float[17];
+        float[] input = new float[19];
 
         try {
             input[0] = convertRaceToFloat(raceDropdown.getText().toString());
@@ -643,35 +649,44 @@ public class DpnCalcActivity extends AppCompatActivity {
                     PreprocessingConstants.NUM_LAB_PROCEDURES_STD
             );
             input[4] = standardizeValue(
+                    parseFloatSafely(numProceduresInput.getText().toString()),
+                    PreprocessingConstants.NUM_PROCEDURES_MEAN,
+                    PreprocessingConstants.NUM_PROCEDURES_STD
+            );
+            input[5] = standardizeValue(
                     parseFloatSafely(numMedicationsInput.getText().toString()),
                     PreprocessingConstants.NUM_MEDICATIONS_MEAN,
                     PreprocessingConstants.NUM_MEDICATIONS_STD
             );
-            input[5] = standardizeValue(
+            input[6] = standardizeValue(
                     parseFloatSafely(numberDiagnosesInput.getText().toString()),
                     PreprocessingConstants.NUM_DIAGNOSES_MEAN,
                     PreprocessingConstants.NUM_DIAGNOSES_STD
             );
-
-            input[6] = standardizeValue(
+            input[7] = standardizeValue(
+                    parseFloatSafely(numberOutpatientInput.getText().toString()),
+                    PreprocessingConstants.NUM_OUTPATIENT_MEAN,
+                    PreprocessingConstants.NUM_OUTPATIENT_STD
+            );
+            input[8] = standardizeValue(
                     parseFloatSafely(numberEmergencyInput.getText().toString()),
                     PreprocessingConstants.NUM_EMERGENCY_MEAN,
                     PreprocessingConstants.NUM_EMERGENCY_STD
             );
-            input[7] = standardizeValue(
+            input[9] = standardizeValue(
                     parseFloatSafely(numberInpatientInput.getText().toString()),
                     PreprocessingConstants.NUM_INPATIENT_MEAN,
                     PreprocessingConstants.NUM_INPATIENT_STD
             );
-            input[8] = convertMaxGluSerumToFloat(maxGluSerumDropdown.getText().toString());
-            input[9] = convertA1CResultToFloat(a1cResultDropdown.getText().toString());
-            input[10] = metforminCheckbox.isChecked() ? 1.0f : 0.0f;
-            input[11] = insulinCheckbox.isChecked() ? 1.0f : 0.0f;
-            input[12] = diabetesMedCheckbox.isChecked() ? 1.0f : 0.0f;
-            input[13] = changeMedCheckbox.isChecked() ? 1.0f : 0.0f;
-            input[14] = parseFloatSafely(heightInput.getText().toString()) / 100.0f;
-            input[15] = parseFloatSafely(weightInput.getText().toString());
-            input[16] = calculateBmi();
+            input[10] = convertMaxGluSerumToFloat(maxGluSerumDropdown.getText().toString());
+            input[11] = convertA1CResultToFloat(a1cResultDropdown.getText().toString());
+            input[12] = metforminCheckbox.isChecked() ? 1.0f : 0.0f;
+            input[13] = insulinCheckbox.isChecked() ? 1.0f : 0.0f;
+            input[14] = diabetesMedCheckbox.isChecked() ? 1.0f : 0.0f;
+            input[15] = changeMedCheckbox.isChecked() ? 1.0f : 0.0f;
+            input[16] = parseFloatSafely(heightInput.getText().toString()) / 100.0f;
+            input[17] = parseFloatSafely(weightInput.getText().toString());
+            input[18] = calculateBmi();
 
         } catch (Exception e) {
             Log.e("PreprocessInput", "Error processing inputs: " + e.getMessage());
@@ -726,7 +741,7 @@ public class DpnCalcActivity extends AppCompatActivity {
             findViewById(R.id.loadingIndicator).setVisibility(View.GONE);
             findViewById(R.id.loadingText).setVisibility(View.GONE);
 
-            Toast.makeText(getApplicationContext(), "Form has been reset", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), "Form telah direset", Toast.LENGTH_SHORT).show();
             scrollView.smoothScrollTo(0, 0);
         });
     }
@@ -901,7 +916,51 @@ public class DpnCalcActivity extends AppCompatActivity {
                         Toast.LENGTH_SHORT).show();
                 return false;
             }
-
+            float height = parseFloatSafely(heightInput.getText().toString());
+            if (height < 30 || height > 300) { // in cm, change if unit is different
+                Toast.makeText(this, "Harap masukkan tinggi badan yang valid", Toast.LENGTH_SHORT).show();
+                return false;
+            }
+            float weight = parseFloatSafely(weightInput.getText().toString());
+            if (weight < 2 || weight > 500) {
+                Toast.makeText(this, "Harap masukkan berat badan yang valid", Toast.LENGTH_SHORT).show();
+                return false;
+            }
+            float labProcedures = parseFloatSafely(numLabProceduresInput.getText().toString());
+            if (labProcedures < 0 || labProcedures > 200) {
+                Toast.makeText(this, "Jumlah prosedur lab tidak valid", Toast.LENGTH_SHORT).show();
+                return false;
+            }
+            float procedures = parseFloatSafely(numProceduresInput.getText().toString());
+            if (procedures < 0 || procedures > 50) {
+                Toast.makeText(this, "Jumlah prosedur tidak valid", Toast.LENGTH_SHORT).show();
+                return false;
+            }
+            float medications = parseFloatSafely(numMedicationsInput.getText().toString());
+            if (medications < 0 || medications > 100) {
+                Toast.makeText(this, "Jumlah pengobatan tidak valid", Toast.LENGTH_SHORT).show();
+                return false;
+            }
+            float diagnoses = parseFloatSafely(numberDiagnosesInput.getText().toString());
+            if (diagnoses < 0 || diagnoses > 30) {
+                Toast.makeText(this, "Jumlah diagnosis tidak valid", Toast.LENGTH_SHORT).show();
+                return false;
+            }
+            float emergency = parseFloatSafely(numberEmergencyInput.getText().toString());
+            if (emergency < 0 || emergency > 50) {
+                Toast.makeText(this, "Jumlah kunjungan darurat tidak valid", Toast.LENGTH_SHORT).show();
+                return false;
+            }
+            float inpatient = parseFloatSafely(numberInpatientInput.getText().toString());
+            if (inpatient < 0 || inpatient > 50) {
+                Toast.makeText(this, "Jumlah rawat inap tidak valid", Toast.LENGTH_SHORT).show();
+                return false;
+            }
+            float outpatient = parseFloatSafely(numberOutpatientInput.getText().toString());
+            if (outpatient < 0 || outpatient > 100) {
+                Toast.makeText(this, "Jumlah rawat jalan tidak valid", Toast.LENGTH_SHORT).show();
+                return false;
+            }
             float numDiagnoses = parseFloatSafely(numberDiagnosesInput.getText().toString());
             if (numDiagnoses < 0) {
                 Toast.makeText(this, "Jumlah diagnosis tidak boleh negatif",

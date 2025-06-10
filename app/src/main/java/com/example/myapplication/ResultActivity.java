@@ -113,6 +113,7 @@ public class ResultActivity extends AppCompatActivity {
         Map<String, List<String>> recommendationMap = new HashMap<>();
 
         recommendationMap.put("low risk", Collections.unmodifiableList(Arrays.asList(
+                "• Tetap pertahankan gaya hidup sehat.",
                 "• Lanjutkan perawatan diabetes secara rutin",
                 "• Lakukan pemeriksaan kaki tahunan",
                 "• Pantau perubahan pada sensasi kaki",
@@ -121,6 +122,7 @@ public class ResultActivity extends AppCompatActivity {
         )));
 
         recommendationMap.put("medium risk", Collections.unmodifiableList(Arrays.asList(
+                "• Awasi gejala seperti kesemutan, kebas, atau rasa terbakar pada kaki/tangan.",
                 "• Jadwalkan kunjungan kontrol dalam 3 bulan",
                 "• Pertimbangkan penggunaan alas kaki khusus",
                 "• Lakukan pemeriksaan kaki harian",
@@ -130,8 +132,8 @@ public class ResultActivity extends AppCompatActivity {
         )));
 
         recommendationMap.put("high risk", Collections.unmodifiableList(Arrays.asList(
-                "• Segera rujuk ke dokter spesialis kaki (podiatris)",
-                "• Wajib menggunakan alas kaki pelindung",
+                "• Segera temui dokter untuk pemeriksaan fisik",
+                "• Kurangi konsumsi gula dan perhatikan pola makan.",
                 "• Tingkatkan pemantauan gula darah",
                 "• Lakukan pemeriksaan kaki klinis setiap bulan",
                 "• Pertimbangkan konsultasi neurologi",
